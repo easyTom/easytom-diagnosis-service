@@ -1,0 +1,54 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: tom-diagnosis-service
+  datasource:
+    url: "jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:13306}/tom_study?\
+          autoReconnect=true&\
+          useUnicode=true&\
+          characterEncoding=utf8&\
+          allowMultiQueries=true&\
+          serverTimezone=Asia/Shanghai&\
+          connectTimeout=10000"
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      max-lifetime: 300000
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+    database-platform: org.hibernate.dialect.MySQLInnoDBDialect
+  redis:
+    host: ${REDIS_HOST:127.0.0.1}
+    port: ${REDIS_PORT:16379}
+    #password: ${REDIS_PASSWORD:1}
+    database: ${REDIS_DATABASE:2}
+
+grpc:
+  port: ${GRPC_PORT:50054}
+  #  优雅停机
+  shutdown-grace: 180
+
+logging:
+  config: classpath:log4j2.yaml
+  level:
+    org:
+      hibernate:
+        type: info
+
+tom:
+  diagnosis:
+    pulsar-properties:
+      url: ${PULSAR_URL:http://127.0.0.1:18080}
+      token: ${PULSAR_TOKEN:''}
+      cluster: ${PULSAR_CLUSTER:public}
+    s3-properties:
+      bucket: ${S3_BUCKET:bucket-tom1}
+      secret-id: ${S3_SECRET_ID:your_access_key}
+      secret-key: ${S3_SECRET_KEY:your_secret_key}
+      endpoint: ${S3_ENDPOINT:http://127.0.0.1:9000}
+      region: ${S3_REGION:ap-shanghai}
+

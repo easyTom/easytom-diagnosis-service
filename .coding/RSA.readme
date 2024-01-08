@@ -1,0 +1,14 @@
+生成私钥文件：运行以下命令生成私钥文件（例如，server.key）：
+
+复制
+openssl genpkey -algorithm RSA -out server.key
+生成证书签名请求（CSR）：运行以下命令生成证书签名请求文件（例如，server.csr），其中包含公钥和相关信息：
+
+复制
+openssl req -new -key server.key -out server.csr
+使用私钥和CSR生成自签名证书：运行以下命令生成自签名证书文件（例如，server.crt）：
+
+复制
+openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
+通过上述步骤，你将生成一个自签名的证书文件（.crt）和对应的私钥文件（.key）。
+

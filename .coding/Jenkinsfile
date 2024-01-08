@@ -1,0 +1,153 @@
+def getDatetime() {
+    return new Date().format('yyyyMMddHHmmss')
+}
+
+pipeline {
+  agent any
+
+  environment {
+    buildDateTime = getDatetime()
+  }
+
+  stages {
+
+    stage('检查环境变量') {
+      steps {
+        echo "JOB_NAME: ${JOB_NAME}"
+        echo "DEPOT_NAME: ${DEPOT_NAME}"
+        echo "BRANCH_NAME: ${BRANCH_NAME}"
+        echo "${GIT_LOCAL_BRANCH.replace("/", "_")}-${GIT_COMMIT_SHORT}"
+      }
+    }
+
+    stage('检出') {
+      steps {
+        checkout([
+          $class: 'GitSCM',
+          branches: [[name: GIT_BUILD_REF]],
+          extensions: [[
+            $class: 'SubmoduleOption',
+            // 是否禁用检出 Submodule
+            disableSubmodules: false,
+            // 是否允许检出时使用 Parent Project 的用户凭据
+            parentCredentials: true,
+            // 是否递归检出所有 Submodule 的更新
+            recursiveSubmodules: true,
+            // 指定参考仓库的路径
+            reference: '',
+            // 是否追踪 .gitmodules 文件中配置的分支的最新提交
+            trackingSubmodules: false
+          ]],
+          userRemoteConfigs: [[
+            url: GIT_REPO_URL,
+            credentialsId: 'dffc0d86-53ca-473f-841b-a42d6d064da4'
+          ]]
+        ])
+      }
+    }
+
+    stage('上传功能分支镜像【feature/*】') {
+      when {
+        branch 'feature/*'
+      }
+      steps {
+        script {
+          docker.withRegistry(
+            "${CCI_CURRENT_WEB_PROTOCOL}://${CCI_CURRENT_TEAM}-docker.pkg.${CCI_CURRENT_DOMAIN}",
+            "${CODING_ARTIFACTS_CREDENTIALS_ID}"
+          ) {
+            def dockerImage = docker.build(
+              "${PROJECT_NAME.toLowerCase()}/docker/${DEPOT_NAME}",
+              "-f .coding/Dockerfile ."
+            )
+            dockerImage.push("feature-${GIT_LOCAL_BRANCH - 'feature/'}-${GIT_COMMIT_SHORT}-${buildDateTime}")
+          }
+        }
+      }
+    }
+
+    stage('上传开发分支镜像【develop】') {
+      when {
+        branch 'develop'
+      }
+      steps {
+        script {
+          docker.withRegistry(
+            "${CCI_CURRENT_WEB_PROTOCOL}://${CCI_CURRENT_TEAM}-docker.pkg.${CCI_CURRENT_DOMAIN}",
+            "${CODING_ARTIFACTS_CREDENTIALS_ID}"
+          ) {
+            def dockerImage = docker.build(
+              "${PROJECT_NAME.toLowerCase()}/docker/${DEPOT_NAME}",
+              "-f .coding/Dockerfile ."
+            )
+            dockerImage.push("develop-${GIT_COMMIT_SHORT}-${buildDateTime}")
+          }
+        }
+      }
+    }
+
+    stage('上传发布分支镜像【release】') {
+      when {
+        branch 'release/*'
+      }
+      steps {
+        script {
+          docker.withRegistry(
+            "${CCI_CURRENT_WEB_PROTOCOL}://${CCI_CURRENT_TEAM}-docker.pkg.${CCI_CURRENT_DOMAIN}",
+            "${CODING_ARTIFACTS_CREDENTIALS_ID}"
+          ) {
+            def dockerImage = docker.build(
+              "${PROJECT_NAME.toLowerCase()}/docker/${DEPOT_NAME}",
+              "-f .coding/Dockerfile ."
+            )
+            dockerImage.push("test-${GIT_LOCAL_BRANCH - 'release/'}-${GIT_COMMIT_SHORT}-${buildDateTime}")
+          }
+        }
+      }
+    }
+
+    stage('上传产品分支镜像【tag】') {
+      when {
+        tag '*'
+      }
+      steps {
+        script {
+          docker.withRegistry(
+            "${CCI_CURRENT_WEB_PROTOCOL}://${CCI_CURRENT_TEAM}-docker.pkg.${CCI_CURRENT_DOMAIN}",
+            "${CODING_ARTIFACTS_CREDENTIALS_ID}"
+          ) {
+            def dockerImage = docker.build(
+              "${PROJECT_NAME.toLowerCase()}/docker/${DEPOT_NAME}",
+              "-f .coding/Dockerfile ."
+            )
+            dockerImage.push("product-${GIT_TAG}-${GIT_COMMIT_SHORT}-${buildDateTime}")
+          }
+        }
+      }
+    }
+
+    stage('上传补丁分支镜像【hotfix】') {
+      when {
+        branch 'hotfix/*'
+      }
+      steps {
+        script {
+          docker.withRegistry(
+            "${CCI_CURRENT_WEB_PROTOCOL}://${CCI_CURRENT_TEAM}-docker.pkg.${CCI_CURRENT_DOMAIN}",
+            "${CODING_ARTIFACTS_CREDENTIALS_ID}"
+          ) {
+            def dockerImage = docker.build(
+              "${PROJECT_NAME.toLowerCase()}/docker/${DEPOT_NAME}",
+              "-f .coding/Dockerfile ."
+            )
+            dockerImage.push('latest')
+            dockerImage.push("hotfix-${GIT_LOCAL_BRANCH - 'hotfix/'}-${GIT_COMMIT_SHORT}-${buildDateTime}")
+          }
+        }
+      }
+    }
+
+  }
+
+
+}

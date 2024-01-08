@@ -1,0 +1,15 @@
+Configuration:
+  status: warn
+  monitorInterval: 30
+  Appenders:
+    Console:
+      name: console
+      target: SYSTEM_OUT
+      PatternLayout:
+        pattern: "%highlight{%date{yy-MM-dd HH:mm:ss,SSS}|%15.15thread|%-48.48class{1.}|%MDC{x-request-id}|%level{length=1}|%message}%n"
+
+  Loggers:
+    Root:
+      level: info
+      appender-ref:
+        ref: console
