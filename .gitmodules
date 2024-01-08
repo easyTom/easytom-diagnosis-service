@@ -1,8 +1,0 @@
-[submodule "src/main/proto"]
-	path = src/main/proto
-	url = https://gitee.com/easyTomUncle/easytom-proto.git
-	branch = develop
-[submodule "proto"]
-	path = proto
-	url = git@github.com:easyTom/tom-proto.git
-	branch = feature/test_envoy

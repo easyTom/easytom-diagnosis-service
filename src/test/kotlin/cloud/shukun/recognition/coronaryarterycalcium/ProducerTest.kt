@@ -54,7 +54,7 @@ class ProducerTests(
     @Test
     fun grpcc() {
         val channel = ManagedChannelBuilder.forAddress(
-            "150.158.239.237", 50058
+            "150.158.239.", 50058
         )
             .usePlaintext()
             // 避免长连接导致pod扩容打不到情况
